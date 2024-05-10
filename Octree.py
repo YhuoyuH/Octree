@@ -36,3 +36,42 @@ octree = o3d.geometry.Octree(max_depth=4)
 octree.create_from_voxel_grid(voxel_grid)
 # 可视化
 o3d.visualization.draw_geometries([octree])
+
+
+def f_traverse(node, node_info):
+    early_stop = False
+
+    if isinstance(node, o3d.geometry.OctreeInternalNode):
+        if isinstance(node, o3d.geometry.OctreeInternalPointNode):
+            n = 0
+            for child in node.children:
+                if child is not None:
+                    n += 1
+            print(
+                "{}{}: 内部节点在深度 {} 有 {} 个子节点和 {} 个点（起点 {}）"
+                .format('    ' * node_info.depth,
+                        node_info.child_index, node_info.depth, n,
+                        len(node.indices), node_info.origin))
+
+            # 我们只想处理有足够多点的节点/空间区域
+            early_stop = len(node.indices) < 250
+    elif isinstance(node, o3d.geometry.OctreeLeafNode):
+        if isinstance(node, o3d.geometry.OctreePointColorLeafNode):
+            print("{}{}: 叶子节点在深度 {} 有 {} 个点，起点为 {}".
+                  format('    ' * node_info.depth, node_info.child_index,
+                         node_info.depth, len(node.indices), node_info.origin))
+    else:
+        raise NotImplementedError('未识别的节点类型！')
+
+    # 提前停止遍历：如果为真，则跳过当前节点的子节点遍历
+    return early_stop
+
+ 
+# 创建八叉树， 树深为4
+octree = o3d.geometry.Octree(max_depth=4)
+# 从点云中创建体素网格， 体素大小为0.01m
+octree.convert_from_point_cloud(pcd, size_expand=0.01)
+# 遍历
+octree.traverse(f_traverse)
+
+print(octree.locate_leaf_node(pcd.points[1952]))

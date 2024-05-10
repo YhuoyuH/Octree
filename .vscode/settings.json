@@ -1,5 +1,6 @@
 {
     "python.analysis.extraPaths": [
         "./Open3D/examples/Python"
-    ]
+    ],
+    "cmake.sourceDirectory": "E:/Project/Octree/Open3D/3rdparty"
 }
